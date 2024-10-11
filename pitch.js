@@ -249,7 +249,7 @@ export default class PitchJS extends EventEmitter {
         await this.ClaimFarming().catch(console.error)
       }
 
-      await new Promise(r => setTimeout(r, 10000 * 10))
+      await new Promise(r => setTimeout(r, 600000));
     }
   }
 }
