@@ -1,0 +1,21 @@
+{
+  "name": "pitchjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0",
+    "ansi-styles": "^6.2.1",
+    "dotenv": "^16.4.5",
+    "got": "^14.4.3",
+    "telegram": "^2.25.15"
+  },
+  "devDependencies": {
+    "@types/got": "^9.6.12",
+    "@types/node": "^18"
+  }
+}
