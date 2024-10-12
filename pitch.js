@@ -18,7 +18,7 @@ export default class PitchJS extends EventEmitter {
      * @type {import('telegram').TelegramClient}
      */
     this._tg = tg;
-    this._http = got.extend({
+    this._httpraw = got.extend({
       prefixUrl: 'https://api.pitchtalk.app',
       http2: true,
       headers: {
@@ -37,6 +37,9 @@ export default class PitchJS extends EventEmitter {
         'Origin': 'https://webapp.pitchtalk.app',
         'Referer': 'https://webapp.pitchtalk.app/'
       },
+    });
+
+    this._http = got.extend(this._httpraw, {
       hooks: {
         beforeRequest: [async (options) => {
           if (this._tokenLock) {
@@ -54,6 +57,7 @@ export default class PitchJS extends EventEmitter {
         }]
       }
     });
+
 
     /** @type {string|null} */
     this._accessToken = null;
@@ -145,7 +149,7 @@ export default class PitchJS extends EventEmitter {
     const { id, username } = JSON.parse(user);
 
     /** @type {PitchLoginResponse} */
-    const response = await this._http.post('v1/api/auth', {
+    const response = await this._httpraw.post('v1/api/auth', {
       json: {
         telegramId: `${id}`,
         username,
@@ -246,7 +250,9 @@ export default class PitchJS extends EventEmitter {
       const now = Date.now();
 
       if (now > this._nextFarmingClaimTime) {
-        await this.ClaimFarming().catch(console.error)
+        await this.ClaimFarming().catch((err) => {
+          logger.error(`${this.phone} | farm claim failed | ${err.message}`);
+        });
       }
 
       await new Promise(r => setTimeout(r, 600000));
