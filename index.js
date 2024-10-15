@@ -4,10 +4,38 @@ import { input, select, Separator } from '@inquirer/prompts';
 import { TelegramClient } from 'telegram';
 import { StoreSession } from 'telegram/sessions/index.js';
 import PitchJS from './pitch.js';
-import got from 'got';
+import s from 'ansi-styles';
+import * as dcjs from 'discord.js';
+import logger from './logger.js';
 
 const APP_ID = parseInt(process.env.APP_ID);
 const APP_HASH = process.env.APP_HASH;
+
+/**
+ * @returns {Promise<{client: dcjs.Client; notify_ch: dcjs.TextChannel}|null>}
+ */
+async function setup_discord() {
+  if (process.env.ENABLE_DISCORD !== '1') {
+    return null;
+  }
+  
+
+  const client = new dcjs.Client({
+    intents: [dcjs.GatewayIntentBits.Guilds]
+  });
+
+  client.on('ready', (c) => {
+    logger.info('discord bot ready!');
+  });
+
+  await client.login(process.env.DISCORD_TOKEN);
+  const channel = await client.channels.fetch(process.env.NOTIFY_CHANNEL_ID);
+
+  return {
+    client,
+    notify_ch: channel
+  }
+}
 
 async function tambah_sesi() {
   const phonenum = await input({
@@ -33,11 +61,27 @@ async function tambah_sesi() {
 }
 
 async function start_farming() {
+  const discord = await setup_discord();
   const dirlist = await fs.readdir('sessions');
   
   dirlist.forEach(async (phonenum) => {
     const client = new TelegramClient(new StoreSession(`sessions/${phonenum}`), APP_ID, APP_HASH);
     const pitch = new PitchJS(phonenum, client);
+    
+    if (discord) {
+      pitch.on('pitch:farmClaim', (result, instance) => {
+        const nextClaimDate = new Date(result.farming.endTime);
+
+        discord.notify_ch.send({
+          content: dcjs.codeBlock(`
+            ${instance.phone} - ${username} claim successfully
+            balance    : ${coins}
+            next_claim : ${nextClaimDate.toLocaleString()}
+          `)
+        });
+      });
+    }
+
     await pitch.Start()
   });
 }
@@ -45,7 +89,7 @@ async function start_farming() {
 (async () => {
   /** @type <string|null> */
   const action = await select({
-    message: 'Pilih aksi',
+    message: 'Pitch Auto Claimer',
     choices: [
       {
         name: 'Mulai farming',

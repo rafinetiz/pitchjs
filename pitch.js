@@ -12,7 +12,7 @@ export default class PitchJS extends EventEmitter {
   ) {
     super();
     /** @type {string} */
-    this.phone = phone;
+    this._phone = phone;
     /**
      * @private
      * @type {import('telegram').TelegramClient}
@@ -69,6 +69,15 @@ export default class PitchJS extends EventEmitter {
     this._updatedAt = 0;
     /** @type {number} */
     this._nextFarmingClaimTime = 0;
+  }
+
+  /** @type {string} */
+  get phone() {
+    return this._phone;
+  }
+
+  get nextFarmingTime() {
+    return this._nextFarmingClaimTime;
   }
 
   /**
@@ -193,11 +202,11 @@ export default class PitchJS extends EventEmitter {
    */
   async ClaimFarming() {
     /** @type {FarmClaimResponse} */
-    const { farming, coins } = await this._http.post('v1/api/users/claim-farming').json();
+    const response = await this._http.post('v1/api/users/claim-farming').json();
 
-    this._nextFarmingClaimTime = new Date(farming.endTime).getTime();
+    this._nextFarmingClaimTime = new Date(response.farming.endTime).getTime();
 
-    this.emit('pitch:farmClaim', coins);
+    this.emit('pitch:farmClaim', response, this);
   }
 
   async CheckFarming() {
@@ -235,9 +244,9 @@ export default class PitchJS extends EventEmitter {
       logger.info(`${this.phone} | farm check | endTime=${(time - Date.now()) / 1000}s`);
     });
 
-    this.on('pitch:farmClaim', coins => {
-      logger.info(`${this.phone} | farm claim success | coins=${coins}`);
-    })
+    this.on('pitch:farmClaim', result => {
+      logger.info(`${this.phone} | farm claim success | coins=${result.coins}`);
+    });
 
     this.on('pitch:daily', ({ coins, tickets, loginStreak }) => {
       logger.info(`${this.phone} | daily claim success | coins=${coins} tickets=${tickets} streak=${loginStreak}`);
