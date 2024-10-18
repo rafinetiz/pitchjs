@@ -74,8 +74,8 @@ async function start_farming() {
 
         discord.notify_ch.send({
           content: dcjs.codeBlock(
-            `${instance.phone} - ${result.username} claim successfully` +
-            `balance    : ${result.coins}` +
+            `${instance.phone} - ${result.username} claim successfully\n` +
+            `balance    : ${result.coins}\n` +
             `next_claim : ${nextClaimDate.toLocaleString()}`
           )
         });
