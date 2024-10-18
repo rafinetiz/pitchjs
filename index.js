@@ -73,11 +73,11 @@ async function start_farming() {
         const nextClaimDate = new Date(result.farming.endTime);
 
         discord.notify_ch.send({
-          content: dcjs.codeBlock(`
-            ${instance.phone} - ${result.username} claim successfully
-            balance    : ${result.coins}
-            next_claim : ${nextClaimDate.toLocaleString()}
-          `)
+          content: dcjs.codeBlock(
+            `${instance.phone} - ${result.username} claim successfully` +
+            `balance    : ${result.coins}` +
+            `next_claim : ${nextClaimDate.toLocaleString()}`
+          )
         });
       });
     }
