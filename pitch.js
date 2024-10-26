@@ -54,6 +54,10 @@ export default class PitchJS extends EventEmitter {
           if (this._accessToken !== null) {
             options.headers['Authorization'] = `Bearer ${this._accessToken}`
           }
+
+          if (this._tg_web_data) {
+            options.headers['X-Telegram-Hash'] = this._tg_web_data;
+          }
         }]
       }
     });
@@ -69,6 +73,8 @@ export default class PitchJS extends EventEmitter {
     this._updatedAt = 0;
     /** @type {number} */
     this._nextFarmingClaimTime = 0;
+    /** @type {string|null} */
+    this._tg_web_data = null;
   }
 
   /** @type {string} */
@@ -156,15 +162,18 @@ export default class PitchJS extends EventEmitter {
       throw new Error('webappdata user is empty');
     }
     const { id, username } = JSON.parse(user);
-
+    const webappdatastr = webappdata.toString();
     /** @type {PitchLoginResponse} */
     const response = await this._httpraw.post('v1/api/auth', {
       json: {
         telegramId: `${id}`,
         username,
-        hash: webappdata.toString(),
+        hash: webappdatastr,
         referralCode: '',
         photoUrl: ''
+      },
+      headers: {
+        'X-Telegram-Hash': webappdatastr
       }
     }).json();
 
@@ -173,13 +182,14 @@ export default class PitchJS extends EventEmitter {
       Buffer.from(accessToken.split('.')[1], 'base64').toString('utf8')
     );
 
+    this._tg_web_data = webappdatastr;
     this._accessToken = accessToken;
     this._tokenExpireDate = jsonData.exp * 1000;
     this._updatedAt = new Date(pitchUser.updatedAt).getTime();
     this.emit('pitch:login', response);
 
     if (dailyRewards.isNewDay) {
-      this.emit('pitch:daily', dailyRewards);
+      this.emit('pitch:daily', pitchUser.username, dailyRewards, this);
     }
 
     return response;
@@ -228,9 +238,10 @@ export default class PitchJS extends EventEmitter {
      *  updateAt: string;
      * }}
      */
-    const { endTime, isActive  } = JSON.parse(body);
-    this._nextFarmingClaimTime = new Date(endTime).getTime();
-    this.emit('pitch:farmCheck', this._nextFarmingClaimTime);
+    const response = JSON.parse(body);
+    this._nextFarmingClaimTime = new Date(response.endTime).getTime();
+
+    this.emit('pitch:farmCheck', response);
   }
 
   async Start() {
@@ -240,8 +251,8 @@ export default class PitchJS extends EventEmitter {
       logger.info(`${this.phone} | login success | coins=${user.coins}`);
     });
 
-    this.on('pitch:farmCheck', time => {
-      logger.info(`${this.phone} | farm check | endTime=${(time - Date.now()) / 1000}s`);
+    this.on('pitch:farmCheck', ({ endTime }) => {
+      logger.info(`${this.phone} | farm check | next farm claim ${new Date(endTime).toLocaleString()}`);
     });
 
     this.on('pitch:farmClaim', result => {

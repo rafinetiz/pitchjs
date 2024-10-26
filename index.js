@@ -1,15 +1,15 @@
 import 'dotenv/config';
 import fs from 'node:fs/promises';
 import { input, select, Separator } from '@inquirer/prompts';
-import { TelegramClient } from 'telegram';
+import { Logger, TelegramClient } from 'telegram';
 import { StoreSession } from 'telegram/sessions/index.js';
 import PitchJS from './pitch.js';
-import s from 'ansi-styles';
 import * as dcjs from 'discord.js';
 import logger from './logger.js';
 
 const APP_ID = parseInt(process.env.APP_ID);
 const APP_HASH = process.env.APP_HASH;
+const base_tg_logger = new Logger('none');
 
 /**
  * @returns {Promise<{client: dcjs.Client; notify_ch: dcjs.TextChannel}|null>}
@@ -48,7 +48,9 @@ async function tambah_sesi() {
     }
   }).then(result => result.replace('+', ''));
 
-  const client = new TelegramClient(new StoreSession(`sessions/${phonenum}`), APP_ID, APP_HASH);
+  const client = new TelegramClient(new StoreSession(`sessions/${phonenum}`), APP_ID, APP_HASH, {
+    baseLogger: base_tg_logger
+  });
 
   await client.start({
     phoneNumber: phonenum,
@@ -65,7 +67,9 @@ async function start_farming() {
   const dirlist = await fs.readdir('sessions');
   
   dirlist.forEach(async (phonenum) => {
-    const client = new TelegramClient(new StoreSession(`sessions/${phonenum}`), APP_ID, APP_HASH);
+    const client = new TelegramClient(new StoreSession(`sessions/${phonenum}`), APP_ID, APP_HASH, {
+      baseLogger: base_tg_logger
+    });
     const pitch = new PitchJS(phonenum, client);
     
     if (discord) {
@@ -77,6 +81,21 @@ async function start_farming() {
             `${instance.phone} - ${result.username} claim successfully\n` +
             `balance    : ${result.coins}\n` +
             `next_claim : ${nextClaimDate.toLocaleString()}`
+          )
+        });
+      });
+
+      pitch.on('pitch:daily', (username, { coins, tickets, loginStreak, isNewDay}, instance) => {
+        if (!isNewDay) {
+          return;
+        }
+
+        discord.notify_ch.send({
+          content: dcjs.codeBlock(
+            `${instance.phone} (${username}) DAILY CLAIM NOTIFY` +
+            `daily_coins   : ${coins}` +
+            `daily_tickets : ${tickets}` +
+            `daily_streak  : ${loginStreak}`
           )
         });
       });
