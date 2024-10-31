@@ -92,10 +92,10 @@ async function start_farming() {
 
         discord.notify_ch.send({
           content: dcjs.codeBlock(
-            `${instance.phone} (${username}) DAILY CLAIM NOTIFY` +
-            `daily_coins   : ${coins}` +
-            `daily_tickets : ${tickets}` +
-            `daily_streak  : ${loginStreak}`
+            `${instance.phone} (${username}) DAILY CLAIM NOTIFY\n` +
+            `daily_coins   : ${coins}\n` +
+            `daily_tickets : ${tickets}\n` +
+            `daily_streak  : ${loginStreak}\n`
           )
         });
       });
