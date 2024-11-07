@@ -18,7 +18,7 @@ async function setup_discord() {
   if (process.env.ENABLE_DISCORD !== '1') {
     return null;
   }
-  
+
 
   const client = new dcjs.Client({
     intents: [dcjs.GatewayIntentBits.Guilds]
@@ -65,27 +65,28 @@ async function tambah_sesi() {
 async function start_farming() {
   const discord = await setup_discord();
   const dirlist = await fs.readdir('sessions');
-  
+
   dirlist.forEach(async (phonenum) => {
     const client = new TelegramClient(new StoreSession(`sessions/${phonenum}`), APP_ID, APP_HASH, {
       baseLogger: base_tg_logger
     });
     const pitch = new PitchJS(phonenum, client);
-    
+
     if (discord) {
-      pitch.on('pitch:farmClaim', (result, instance) => {
-        const nextClaimDate = new Date(result.farming.endTime);
+      pitch.on('pitch:farmClaim', ({ username, coins, telegramId, farming }, instance) => {
+        const nextClaimDate = new Date(farming.endTime);
 
         discord.notify_ch.send({
           content: dcjs.codeBlock(
-            `${instance.phone} - ${result.username} claim successfully\n` +
-            `balance    : ${result.coins}\n` +
-            `next_claim : ${nextClaimDate.toLocaleString()}`
+            `pitch daily claim success\n` +
+            `account     : ${instance.phone} ${username} (${telegramId})` +
+            `balance     : ${coins}\n` +
+            `next_claim  : ${nextClaimDate.toLocaleString()}`
           )
         });
       });
 
-      pitch.on('pitch:daily', (username, { coins, tickets, loginStreak, isNewDay}, instance) => {
+      pitch.on('pitch:daily', (username, { coins, tickets, loginStreak, isNewDay }, instance) => {
         if (!isNewDay) {
           return;
         }
