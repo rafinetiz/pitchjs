@@ -189,7 +189,7 @@ export default class PitchJS extends EventEmitter {
     this.emit('pitch:login', response);
 
     if (dailyRewards.isNewDay) {
-      this.emit('pitch:daily', pitchUser.username, dailyRewards, this);
+      this.emit('pitch:daily', pitchUser, dailyRewards, this);
     }
 
     return response;

@@ -78,22 +78,23 @@ async function start_farming() {
 
         discord.notify_ch.send({
           content: dcjs.codeBlock(
-            `pitch daily claim success\n` +
-            `account     : ${instance.phone} ${username} (${telegramId})` +
+            `pitch farming claim success\n` +
+            `account     : ${instance.phone} ${username} (${telegramId})\n` +
             `balance     : ${coins}\n` +
             `next_claim  : ${nextClaimDate.toLocaleString()}`
           )
         });
       });
 
-      pitch.on('pitch:daily', (username, { coins, tickets, loginStreak, isNewDay }, instance) => {
+      pitch.on('pitch:daily', ({ username, telegramId }, { coins, tickets, loginStreak, isNewDay }, instance) => {
         if (!isNewDay) {
           return;
         }
 
         discord.notify_ch.send({
           content: dcjs.codeBlock(
-            `${instance.phone} (${username}) DAILY CLAIM NOTIFY\n` +
+            `pitch daily login claim success\n` +
+            `account       : ${instance.phone} ${username} (${telegramId})\n` +
             `daily_coins   : ${coins}\n` +
             `daily_tickets : ${tickets}\n` +
             `daily_streak  : ${loginStreak}\n`
