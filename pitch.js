@@ -247,7 +247,7 @@ export default class PitchJS extends EventEmitter {
   async Start() {
     logger.info(`${this.phone} | starting`);
 
-    this.on('pitch:login', ({user}) => {
+    this.on('pitch:login', ({ user }) => {
       logger.info(`${this.phone} | login success | coins=${user.coins}`);
     });
 
@@ -259,14 +259,14 @@ export default class PitchJS extends EventEmitter {
       logger.info(`${this.phone} | farm claim success | coins=${result.coins}`);
     });
 
-    this.on('pitch:daily', ({ coins, tickets, loginStreak }) => {
-      logger.info(`${this.phone} | daily claim success | coins=${coins} tickets=${tickets} streak=${loginStreak}`);
+    this.on('pitch:daily', ({ dailyRewards }) => {
+      logger.info(`${this.phone} | daily claim success | coins=${dailyRewards.coins} tickets=${dailyRewards.tickets} streak=${dailyRewards.loginStreak}`);
     });
 
     await this.login();
     await this.CheckFarming();
 
-    while(true) {
+    while (true) {
       const now = Date.now();
 
       if (now > this._nextFarmingClaimTime) {
