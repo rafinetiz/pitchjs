@@ -58,7 +58,17 @@ export default class PitchJS extends EventEmitter {
           if (this._tg_web_data) {
             options.headers['X-Telegram-Hash'] = this._tg_web_data;
           }
-        }]
+        }],
+        afterResponse: [
+          async (response, retryWithMergedOptions) => {
+            const opts = response.request.options;
+
+            logger.info(`${this.phone} | debug: ${opts.method} ${response.url} got response`);
+            logger.info(`${this.phone} | debug: ${opts.responseType === 'json' ? JSON.stringify(response.body) : response.body}`);
+
+            return response;
+          }
+        ]
       }
     });
 
@@ -212,7 +222,9 @@ export default class PitchJS extends EventEmitter {
    */
   async ClaimFarming() {
     /** @type {FarmClaimResponse} */
-    const response = await this._http.post('v1/api/users/claim-farming').json();
+    const response = await this._http.post('v1/api/users/claim-farming', {
+      responseType: 'json'
+    });
 
     this._nextFarmingClaimTime = new Date(response.farming.endTime).getTime();
 
