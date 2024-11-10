@@ -226,9 +226,11 @@ export default class PitchJS extends EventEmitter {
       responseType: 'json'
     });
 
-    this._nextFarmingClaimTime = new Date(response.farming.endTime).getTime();
+    const { farming } = response.body;
 
-    this.emit('pitch:farmClaim', response, this);
+    this._nextFarmingClaimTime = new Date(farming.endTime).getTime();
+
+    this.emit('pitch:farmClaim', response.body, this);
   }
 
   async CheckFarming() {
